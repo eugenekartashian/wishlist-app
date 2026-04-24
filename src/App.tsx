@@ -48,6 +48,9 @@ function toUserMessage(input: unknown) {
       if (message.includes('failed to fetch page (403)')) {
         return 'This website blocks automated parsing (403). Try another product URL or add manually later.'
       }
+      if (message.includes('Parsing timed out')) {
+        return 'This website is too slow or blocks bot requests. Try another product URL or add manually later.'
+      }
 
       if (message.includes("Could not find the table 'public.wishlists'")) {
         return 'Supabase schema is not created yet. Run SQL from supabase/schema.sql in SQL Editor.'
@@ -65,6 +68,9 @@ function toUserMessage(input: unknown) {
 
   if (text.includes('failed to fetch page (403)')) {
     return 'This website blocks automated parsing (403). Try another product URL or add manually later.'
+  }
+  if (text.includes('Parsing timed out')) {
+    return 'This website is too slow or blocks bot requests. Try another product URL or add manually later.'
   }
 
   return text

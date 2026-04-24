@@ -129,14 +129,23 @@ export async function parseProductUrl(url) {
   }
 
   try {
-    const response = await fetch(parsedUrl.toString(), {
-      method: 'GET',
-      redirect: 'follow',
-      headers: {
-        'user-agent': 'WishlistBot/1.0 (+https://wishlist.local)',
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-    })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 12000)
+
+    let response
+    try {
+      response = await fetch(parsedUrl.toString(), {
+        method: 'GET',
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: {
+          'user-agent': 'WishlistBot/1.0 (+https://wishlist.local)',
+          accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
 
     if (!response.ok) {
       return { status: 400, body: { error: `failed to fetch page (${response.status})` } }
@@ -150,6 +159,16 @@ export async function parseProductUrl(url) {
     const html = await response.text()
     return { status: 200, body: parseHtml(parsedUrl.toString(), html) }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        status: 504,
+        body: {
+          error: 'parser_timeout',
+          message: 'Parsing timed out. This site may block bots or respond too slowly.',
+        },
+      }
+    }
+
     return {
       status: 500,
       body: {
