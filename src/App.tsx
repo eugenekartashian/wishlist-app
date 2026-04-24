@@ -143,17 +143,13 @@ function App() {
   )
 
   const bootstrapSession = useCallback(async () => {
+    const params = new URLSearchParams(window.location.search)
     const authError = extractAuthErrorFromUrl()
     if (authError) {
       setMessage(authError)
     }
 
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('code')) {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
-      if (exchangeError) {
-        setMessage(toUserMessage(exchangeError))
-      }
+    if (params.has('code') || params.has('error') || params.has('error_description')) {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
 
