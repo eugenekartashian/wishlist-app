@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/shared/:token", "destination": "/index.html" }
+  ]
+}
