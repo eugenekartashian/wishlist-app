@@ -36,10 +36,35 @@ const isSharedView = window.location.pathname.startsWith('/shared/')
 const sharedToken = isSharedView ? decodeURIComponent(window.location.pathname.replace('/shared/', '')) : null
 
 function toUserMessage(input: unknown) {
+  if (input && typeof input === 'object') {
+    const anyInput = input as Record<string, unknown>
+    const message =
+      (typeof anyInput.message === 'string' && anyInput.message) ||
+      (typeof anyInput.error_description === 'string' && anyInput.error_description) ||
+      (typeof anyInput.error === 'string' && anyInput.error) ||
+      (typeof anyInput.details === 'string' && anyInput.details)
+
+    if (message) {
+      if (message.includes('failed to fetch page (403)')) {
+        return 'This website blocks automated parsing (403). Try another product URL or add manually later.'
+      }
+
+      if (message.includes("Could not find the table 'public.wishlists'")) {
+        return 'Supabase schema is not created yet. Run SQL from supabase/schema.sql in SQL Editor.'
+      }
+
+      return message
+    }
+  }
+
   const text = input instanceof Error ? input.message : String(input ?? 'Unknown error')
 
   if (text.includes("Could not find the table 'public.wishlists'")) {
     return 'Supabase schema is not created yet. Run SQL from supabase/schema.sql in SQL Editor.'
+  }
+
+  if (text.includes('failed to fetch page (403)')) {
+    return 'This website blocks automated parsing (403). Try another product URL or add manually later.'
   }
 
   return text
@@ -122,18 +147,27 @@ function App() {
       let activeWishlist = existingWishlist as Wishlist | null
 
       if (!activeWishlist) {
-        const { data: createdWishlist, error: insertError } = await supabase
+        const { error: upsertError } = await supabase
           .from('wishlists')
-          .insert({ user_id: userId, title: 'My Wishlist' })
-          .select('id, title, share_token')
-          .single()
+          .upsert({ user_id: userId, title: 'My Wishlist' }, { onConflict: 'user_id' })
 
-        if (insertError) {
-          setMessage(toUserMessage(insertError))
+        if (upsertError) {
+          setMessage(toUserMessage(upsertError))
           return
         }
 
-        activeWishlist = createdWishlist as Wishlist
+        const { data: createdOrExisting, error: reselectError } = await supabase
+          .from('wishlists')
+          .select('id, title, share_token')
+          .eq('user_id', userId)
+          .maybeSingle()
+
+        if (reselectError || !createdOrExisting) {
+          setMessage(toUserMessage(reselectError ?? { message: 'Failed to load wishlist after upsert' }))
+          return
+        }
+
+        activeWishlist = createdOrExisting as Wishlist
       }
 
       setWishlist(activeWishlist)
