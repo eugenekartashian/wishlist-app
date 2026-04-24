@@ -109,6 +109,7 @@ function App() {
 
   const [urlInput, setUrlInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
   const [sharedTitle, setSharedTitle] = useState<string>('Shared Wishlist')
@@ -356,6 +357,24 @@ function App() {
     await supabase.auth.signOut()
   }
 
+  async function removeItem(itemId: string) {
+    if (!wishlist) return
+
+    setMessage(null)
+    setDeletingItemId(itemId)
+
+    const { error } = await supabase.from('wishlist_items').delete().eq('id', itemId).eq('wishlist_id', wishlist.id)
+
+    if (error) {
+      setMessage(toUserMessage(error))
+      setDeletingItemId(null)
+      return
+    }
+
+    setItems((prev) => prev.filter((item) => item.id !== itemId))
+    setDeletingItemId(null)
+  }
+
   if (isSharedView && sharedToken) {
     return (
       <main className="container">
@@ -468,9 +487,19 @@ function App() {
               {item.description ? <p>{item.description}</p> : null}
               <div className="row">
                 {item.price !== null ? <strong>{formatPrice(item.price, item.currency)}</strong> : <span>No price</span>}
-                <a href={item.source_url} target="_blank" rel="noreferrer">
-                  Open
-                </a>
+                <div className="row-actions">
+                  <a href={item.source_url} target="_blank" rel="noreferrer">
+                    Open
+                  </a>
+                  <button
+                    type="button"
+                    className="text-button danger"
+                    disabled={deletingItemId === item.id}
+                    onClick={() => removeItem(item.id)}
+                  >
+                    {deletingItemId === item.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             </div>
           </li>

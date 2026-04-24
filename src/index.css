@@ -196,6 +196,27 @@ button:disabled {
   text-decoration: none;
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.text-button {
+  background: transparent;
+  border: none;
+  color: #0f4eba;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  height: auto;
+  width: auto;
+}
+
+.text-button.danger {
+  color: #b42318;
+}
+
 .message {
   margin-top: 16px;
   color: #a33b00;
