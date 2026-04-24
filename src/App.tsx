@@ -121,6 +121,14 @@ function App() {
     return `${window.location.origin}/shared/${wishlist.share_token}`
   }, [wishlist?.share_token])
 
+  const userName =
+    session?.user.user_metadata?.full_name ||
+    session?.user.user_metadata?.name ||
+    session?.user.email ||
+    'User'
+  const userEmail = session?.user.email ?? ''
+  const userAvatar = session?.user.user_metadata?.avatar_url || session?.user.user_metadata?.picture || null
+
   const loadItems = useCallback(async (wishlistId: string) => {
     const { data, error } = await supabase
       .from('wishlist_items')
@@ -390,13 +398,19 @@ function App() {
         <ul className="grid">
           {sharedItems.map((item) => (
             <li className="card" key={item.id}>
-              {item.image_url ? <img src={item.image_url} alt={item.title ?? 'Wishlist item'} /> : null}
+              <div className="card-media">
+                {item.image_url ? <img src={item.image_url} alt={item.title ?? 'Wishlist item'} /> : null}
+              </div>
               <div className="card-body">
                 <h3>{item.title ?? 'Untitled item'}</h3>
                 {item.description ? <p>{item.description}</p> : null}
-                <div className="row">
-                  {item.price !== null ? <strong>{formatPrice(item.price, item.currency)}</strong> : <span>No price</span>}
-                  <a href={item.source_url} target="_blank" rel="noreferrer">
+                <div className="card-footer">
+                  {item.price !== null ? (
+                    <strong className="card-price">{formatPrice(item.price, item.currency)}</strong>
+                  ) : (
+                    <span className="card-price">No price</span>
+                  )}
+                  <a href={item.source_url} target="_blank" rel="noreferrer" className="link-button">
                     Open
                   </a>
                 </div>
@@ -439,8 +453,21 @@ function App() {
   return (
     <main className="container">
       <header className="topbar">
-        <h1>{wishlist?.title ?? 'My Wishlist'}</h1>
-        <div className="actions">
+        <div>
+          <h1>{wishlist?.title ?? 'My Wishlist'}</h1>
+        </div>
+        <div className="actions user-panel">
+          <div className="user-chip">
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className="user-avatar" />
+            ) : (
+              <div className="user-avatar">{userName[0]?.toUpperCase()}</div>
+            )}
+            <div className="user-meta">
+              <span>{userName}</span>
+              <span>{userEmail}</span>
+            </div>
+          </div>
           <button className="button ghost" onClick={signOut}>
             Sign out
           </button>
@@ -481,14 +508,20 @@ function App() {
       <ul className="grid">
         {items.map((item) => (
           <li className="card" key={item.id}>
-            {item.image_url ? <img src={item.image_url} alt={item.title ?? 'Wishlist item'} /> : null}
+            <div className="card-media">
+              {item.image_url ? <img src={item.image_url} alt={item.title ?? 'Wishlist item'} /> : null}
+            </div>
             <div className="card-body">
               <h3>{item.title ?? 'Untitled item'}</h3>
               {item.description ? <p>{item.description}</p> : null}
-              <div className="row">
-                {item.price !== null ? <strong>{formatPrice(item.price, item.currency)}</strong> : <span>No price</span>}
+              <div className="card-footer">
+                {item.price !== null ? (
+                  <strong className="card-price">{formatPrice(item.price, item.currency)}</strong>
+                ) : (
+                  <span className="card-price">No price</span>
+                )}
                 <div className="row-actions">
-                  <a href={item.source_url} target="_blank" rel="noreferrer">
+                  <a href={item.source_url} target="_blank" rel="noreferrer" className="link-button">
                     Open
                   </a>
                   <button
