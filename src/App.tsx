@@ -410,7 +410,7 @@ function App() {
                   ) : (
                     <span className="card-price">No price</span>
                   )}
-                  <a href={item.source_url} target="_blank" rel="noreferrer" className="link-button">
+                  <a href={item.source_url} target="_blank" rel="noreferrer" className="item-action open">
                     Open
                   </a>
                 </div>
@@ -468,7 +468,7 @@ function App() {
               <span>{userEmail}</span>
             </div>
           </div>
-          <button className="button ghost" onClick={signOut}>
+          <button className="button ghost signout-btn" onClick={signOut}>
             Sign out
           </button>
         </div>
@@ -521,12 +521,12 @@ function App() {
                   <span className="card-price">No price</span>
                 )}
                 <div className="row-actions">
-                  <a href={item.source_url} target="_blank" rel="noreferrer" className="link-button">
+                  <a href={item.source_url} target="_blank" rel="noreferrer" className="item-action open">
                     Open
                   </a>
                   <button
                     type="button"
-                    className="text-button danger"
+                    className="item-action delete"
                     disabled={deletingItemId === item.id}
                     onClick={() => removeItem(item.id)}
                   >
