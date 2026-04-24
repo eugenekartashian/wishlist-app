@@ -45,6 +45,18 @@ function toUserMessage(input: unknown) {
   return text
 }
 
+function extractAuthErrorFromUrl() {
+  const params = new URLSearchParams(window.location.search)
+  const raw = params.get('error_description') ?? params.get('error')
+  if (!raw) return null
+
+  try {
+    return decodeURIComponent(raw.replaceAll('+', ' '))
+  } catch {
+    return raw
+  }
+}
+
 function formatPrice(price: number | null, currency: string | null) {
   if (price === null) return null
   if (!currency) return String(price)
@@ -131,6 +143,20 @@ function App() {
   )
 
   const bootstrapSession = useCallback(async () => {
+    const authError = extractAuthErrorFromUrl()
+    if (authError) {
+      setMessage(authError)
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('code')) {
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
+      if (exchangeError) {
+        setMessage(toUserMessage(exchangeError))
+      }
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     const { data } = await supabase.auth.getSession()
     setSession(data.session)
 
