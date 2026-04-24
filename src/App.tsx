@@ -149,15 +149,15 @@ function App() {
       setMessage(authError)
     }
 
-    if (params.has('code') || params.has('error') || params.has('error_description')) {
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-
     const { data } = await supabase.auth.getSession()
     setSession(data.session)
 
     if (data.session) {
       await initializeWishlist(data.session)
+    }
+
+    if (params.has('code') || params.has('error') || params.has('error_description')) {
+      window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [initializeWishlist])
 
